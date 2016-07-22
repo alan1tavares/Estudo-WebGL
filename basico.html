@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<!-- Library -->
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+</head>
+<body>
+	<div id="webgl"></div>
+	<script type="text/javascript">
+		// Code basic webGL
+		var scene, camera, renderer;
+
+		function init(){
+			// Creating Scene
+			scene = new THREE.Scene();
+
+			// Create Camera
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+			camera.position.x = 15;
+			camera.position.y = 15;
+			camera.position.z = 30;
+			camera.lookAt(scene.position);
+
+			// Create renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			// Creare axis
+			var axes = new THREE.AxisHelper(20);
+			scene.add(axes);
+
+			// Set output webGL
+			document.getElementById("webgl").appendChild(renderer.domElement);
+
+			// Rendering the scene
+			renderer.render(scene, camera);
+		};
+
+		window.onload = init;
+	</script>
+</body>
+</html>
