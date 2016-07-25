@@ -31,8 +31,14 @@
 			var axes = new THREE.AxisHelper(20);
 			scene.add(axes);
 
+			var material = new THREE.MeshBasicMaterial({
+									opacity: 0.5,
+									color: 0x44ff44,
+									transparent: true
+							});
 			// Creating container
-			var container = new Container(10,4,5);
+			var container = new Container(10,4,5,material);
+			container.inScene(scene);
 			container.set(5,3,10);
 
 			// Set output webGL
@@ -42,10 +48,11 @@
 			renderer.render(scene, camera);
 		};
 
-		function Container(width, height, depth){
+		function Container(width, height, depth, material){
 			this.width = width;
 			this.height = height;
 			this.depth = depth;
+			this.material = material;
 
 			this.planeFace = [null, null, null, null];
 			this.planeGeometry = [
@@ -56,16 +63,27 @@
 				new THREE.PlaneGeometry(width, height)]; // front
 
 			// Creating the planes
-			for(i = 0; i < 5; i++){
-				//planeGeometry[i] = new THREE.PlaneGeometry(10, 10);
-				this.planeFace[i] = new THREE.Mesh(this.planeGeometry[i]);
-				scene.add(this.planeFace[i]);
-			}
+			this.mesh(material);
 
 			// Set coordinates
 			this.set();
 		};
 
+		// Creating the planes
+		Container.prototype.mesh = function(material) {
+			for(i = 0; i < 5; i++){
+				this.planeFace[i] = new THREE.Mesh(this.planeGeometry[i], this.material);
+			}
+		}
+
+		// Add in scene
+		Container.prototype.inScene = function(scene){
+			for (var i = 0; i < 5; i++) {
+				scene.add(this.planeFace[i]);
+			}
+		};
+
+		// Set coordinates
 		Container.prototype.set = function(x,y,z){
 			// front
 			this.planeFace[4].position.set(this.width/2+x, this.height/2+y, this.depth+z);
