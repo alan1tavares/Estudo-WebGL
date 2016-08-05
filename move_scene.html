@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<!-- Library -->
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+	<script type="text/javascript" src="../three.js-master/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+	<div id="webgl"></div>
+	<script type="text/javascript">
+		// Code basic webGL
+		var scene, camera, renderer, controls;
+
+		function init(){
+			// Creating Scene
+			scene = new THREE.Scene();
+
+			// Create Camera
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+			camera.position.x = 15;
+			camera.position.y = 15;
+			camera.position.z = 30;
+			camera.lookAt(scene.position);
+
+			// Create renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			// Create axis
+			var axes = new THREE.AxisHelper(20);
+			scene.add(axes);
+
+			// Create cube
+			// Crete Geometry
+			var geometryBox = new THREE.BoxGeometry(1,1,1);
+			// Create Material
+			var materialBox = new THREE.MeshBasicMaterial({
+				color: 0x00ff00
+			});
+			// Create cube
+			var cube = new THREE.Mesh(geometryBox, materialBox);
+			cube.position.set(10,5,15);
+			// Add cube in scene
+			scene.add(cube);
+
+			// Set output webGL
+			document.getElementById("webgl").appendChild(renderer.domElement);
+
+			// Controls
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+		};
+
+		function animate(){
+			requestAnimationFrame(animate);
+			//controls.update();
+
+			// Rendering the scene
+			renderer.render(scene, camera);
+		};
+
+		init();
+		animate();
+	</script>
+</body>
+</html>
