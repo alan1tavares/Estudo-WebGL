@@ -31,6 +31,20 @@
 			var axes = new THREE.AxisHelper(20);
 			scene.add(axes);
 
+			// Create cube
+			// Crete Geometry
+			var geometryBox = [new THREE.BoxGeometry(1,1,1), new THREE.BoxGeometry(1,1,1), new THREE.BoxGeometry(1,1,1)];
+			// Create Material
+			var materialBox = new THREE.MeshBasicMaterial({
+				color: 0x00ff00
+			});
+			// Create cube
+			var cube = new THREE.Mesh(geometryBox, materialBox);
+			cube.position.set(10,5,15);
+			// Add cube in scene
+			scene.add(cube);
+
+
 			// Set output webGL
 			document.getElementById("webgl").appendChild(renderer.domElement);
 
