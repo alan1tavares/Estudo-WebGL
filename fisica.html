@@ -2,13 +2,21 @@
 <html>
 <head>
 	<title></title>
-	<script type="text/javascript" src="https://raw.githubusercontent.com/mrdoob/three.js/dev/build/three.min.js"></script>
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
 	<script type="text/javascript" src="../three.js-master/examples/js/controls/OrbitControls.js"></script>
 	<script type="text/javascript" src="../three.js-master/examples/js/controls/TransformControls.js"></script>
+	<script type="text/javascript" src="/build/physi.js"></script>
 </head>
 <body>
 	<div id="webgl"></div>
 	<script type="text/javascript">
+
+		'use strict';
+
+		// Configure physi
+    	Physijs.scripts.worker = 'build/js/physijs_worker.js';
+    	Physijs.scripts.ammo = 'build/js/ammo.js';
+
 		var scene, camera, renderer, controlsObject, controlsCamera, raycaster;
 
 		var mouse = new THREE.Vector2();
@@ -18,7 +26,7 @@
 
 		function init(){
 			// Creating scene
-			scene = new THREE.Scene();
+			scene = new Physijs.Scene();
 
 			// Create camera
 			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -80,7 +88,7 @@
 
 			// Cubes
 			var geometry = new THREE.BoxGeometry(1,1,1);
-			var cube = new THREE.Mesh(geometry);
+			var cube = new Physijs.Cube(geometry);
 			cube.position.set(10,3,5);
 
 			scene.add(cube);
