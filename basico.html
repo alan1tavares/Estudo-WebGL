@@ -3,7 +3,7 @@
 <head>
 	<title></title>
 	<!-- Library -->
-	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+	<script type="text/javascript" src="https://raw.githubusercontent.com/mrdoob/three.js/dev/build/three.js"></script>
 </head>
 <body>
 	<div id="webgl"></div>
@@ -39,7 +39,7 @@
 				color: 0x00ff00
 			});
 			// Create cube
-			var cube = new THREE.Mesh(geometryBox, materialBox);
+			var cube = new THREE.Mesh(geometryBox[0], materialBox);
 			cube.position.set(10,5,15);
 			// Add cube in scene
 			scene.add(cube);
