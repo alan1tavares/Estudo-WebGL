@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<!-- Library -->
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+</head>
+<body>
+	<div id="webgl"></div>
+	<script type="text/javascript">
+		var scene, camera, renderer;
+
+		var mouse =  new THREE.Vector2();
+
+		init();
+		animate();
+
+		function init(){
+			// Creating Scene
+			scene = new THREE.Scene();
+
+			// Creating Camera
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+			camera.position.set(15,15,30);
+			camera.lookAt(scene.position);
+
+			// Create renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(0xeeeeee);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			// Set output webGL
+			document.getElementById("webgl").appendChild(renderer.domElement);
+
+			// Create axis
+			var axes = new THREE.AxisHelper(20);
+			scene.add(axes);
+
+			creatObjects();
+
+			// Events
+			events();
+		}
+
+		function animate(){
+			
+			// Other code here
+
+			requestAnimationFrame(animate);
+			renderer.render(scene, camera);
+		}
+
+		function creatObjects(){
+			
+			// Objects here
+			
+			var group = new THREE.Object3D();
+			
+			var offset = 10
+			var origin = new THREE.Vector3(5,0,5);
+
+			// Axe X
+			var dir = new THREE.Vector3(1,0,0);
+			var arrowX = new THREE.ArrowHelper(dir, origin, offset, 0xff0000);
+			group.add(arrowX);
+
+			// Axe Y
+			dir.set(0,1,0);
+			var arrowY = new THREE.ArrowHelper(dir, origin, offset, 0x00ff00);
+			group.add(arrowY);
+
+			// Axe Z
+			dir.set(0,0,1)
+			var arrowZ = new THREE.ArrowHelper(dir, origin, offset, 0x0000ff);
+			group.add(arrowZ);
+			
+			scene.add(group);
+		
+		}
+
+		// Events
+		function events(){
+			window.addEventListener('resize', onResize, false);
+			window.addEventListener('mousedown', onMouseDown);
+		}
+
+		//Automatically resize the output when browser size changes
+		function onResize(){
+			camera.aspect = window.innerWidth/window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight)
+		}
+
+		function onMouseDown(event){
+			event.preventDefault();
+
+			mouse.x =   (event.clientX / window.innerWidth)  * 2 - 1;
+			mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+			
+		}
+
+
+
+
+	</script>
+</body>
+</html>
