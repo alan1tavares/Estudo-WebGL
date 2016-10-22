@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<!-- Library -->
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+	<script type="text/javascript" src="../three.js-master/examples/js/controls/OrbitControls.js"></script>
+	<script type="text/javascript" src="build/TransformControls.js"></script>
+	<script type="text/javascript" src="build/physi.js"></script>
+</head>
+<body>
+	<div id="webgl"> </div>
+	<script type="text/javascript">
+		var scene, camera, renderer, transformControls;
+
+		var raycaster = new THREE.Raycaster();
+		var mouse = new THREE.Vector2();
+		var objetos = [];
+		var objetoSelecionado;
+
+		'use strict';
+
+		// Configure physi
+    	Physijs.scripts.worker = 'build/physijs_worker.js';
+    	Physijs.scripts.ammo = '../build/ammo.js';
+
+		function init(){
+			// Creating Scene
+			scene = new Physijs.Scene();
+
+			// Creating Camera
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+			camera.position.set(15,15,30);
+			camera.lookAt(scene.position);
+
+			// Create Renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setClearColor(0xEEEEEE);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			// Create axis
+			var axes = new THREE.AxisHelper(20);
+			scene.add(axes);
+
+			// Set output webGL
+			document.getElementById("webgl").appendChild(renderer.domElement);
+
+			// Controls object
+			transformControls = new THREE.TransformControls(camera, renderer.domElement);
+			transformControls.setMode("translate");
+			transformControls.addEventListener('change', render);
+			scene.add(transformControls);
+			
+			objects();
+
+			eventos();
+		}
+
+		function animate(){
+
+			scene.simulate();
+			transformControls.update();
+			render();
+
+			requestAnimationFrame(animate);
+		}
+
+		function render(){
+			renderer.render(scene, camera);
+		}
+
+		function objects(){
+			objetos.push(criarCubo(5,10,10, 1,1,1, 0x00ff00));
+
+			// Crair chao
+			var chao = criarCubo(5,0,5, 10,0.5,15, 0x992489);
+			chao.mass = 0;
+		}
+
+		// Cria um cubo
+		// x,y, z: coordenadas
+		// largura, atura, profundidade: tamanho
+		// cor: a cor em hexadecimal
+		function criarCubo(x, y, z, largura, altura, profundidade, cor){
+			var cubo = new Physijs.BoxMesh(
+			
+				new THREE.BoxGeometry(largura,altura,profundidade), // Geotmetria
+				new THREE.MeshBasicMaterial({ // Material
+					color: cor
+				
+				})
+			);
+
+			// Posicao do cubo
+			cubo.position.set(x,y,z);
+			scene.add(cubo);
+
+			return cubo;
+		}
+
+		// Nao e bem tirar a fisica mais foi so 
+		function tirarFisicaDo(pObjeto){
+
+			var v = new THREE.Vector3(0,0,0);
+
+			pObjeto.setAngularFactor( v );
+			pObjeto.setAngularVelocity( v );
+			pObjeto.setLinearFactor( v );
+			pObjeto.setLinearVelocity( v );
+
+		}		
+
+		function eventos(){
+
+			renderer.domElement.addEventListener('mousedown', eMouseDown);
+			renderer.domElement.addEventListener('mouseup', eMouseUp);
+
+		}
+
+		function eMouseDown(event){
+			if(event.button === 0){
+			event.preventDefault();
+
+			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+			mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			raycaster.setFromCamera(mouse, camera);
+			var intersects = raycaster.intersectObjects(objetos);
+
+			console.log(intersects);
+
+			if(intersects.length > 0){
+				objetoSelecionado = intersects[0].object;
+
+				// Configurar o objeto TransformControls
+				transformControls.attach(intersects[0].object);
+				transformControls.visible = true;
+
+				// Configurar o objeto selecionado
+				objetoSelecionado.__dirtyPosition = true;
+				tirarFisicaDo(objetoSelecionado);
+
+			}else{
+				transformControls.detach();
+				objetoBotarFisica(objetoSelecionado);
+			}
+		}
+
+
+		}
+
+		function eMouseUp(event){
+
+		}
+
+		function objetoBotarFisica(pObjeto){
+			if(pObjeto !== null){
+				var v = new THREE.Vector3(1,1,1);
+				pObjeto.setAngularFactor(v);
+				pObjeto.setLinearFactor(v);
+			}
+		}	
+
+		init();
+		animate();
+
+
+
+
+
+	</script>
+</body>
+</html>

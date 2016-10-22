@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="../three.js-master/build/three.js"></script>
+	<script type="text/javascript" src="../three.js-master/examples/js/controls/OrbitControls.js"></script>
+	<script type="text/javascript" src="build/physi.js"></script>
+</head>
+<body>
+	<div id="webgl"></div>
+	<script type="text/javascript">
+
+		'use strict';
+		
+		// Configure physi
+    	Physijs.scripts.worker = 'build/physijs_worker.js';
+    	Physijs.scripts.ammo = '../build/ammo.js';
+
+		var scene, camera, renderer, container;
+
+		var raycaster = new THREE.Raycaster();
+		var mouse = new THREE.Vector2();
+		
+		var plano = new THREE.Plane();
+		var offset = new THREE.Vector3();
+		var posicaoMousePlano = new THREE.Vector3();
+		var objetoInterceptado = null;
+		var cuboSelecionado; // o cubo que selecionada para muda de posicao
+
+		var objetos = [];
+
+		var orbitControls;
+		var transformControls;
+
+		function init(){
+			// Criar cena
+			scene = new Physijs.Scene();
+
+			// Criar Camera
+			camera = new THREE.PerspectiveCamera(20, window.innerWidth/window.innerHeight, 0.1, 1000);
+			camera.position.set(60,50,60);
+			camera.lookAt(scene.position);
+			scene.add(camera);
+
+			// Criar renderer
+			renderer = new THREE.WebGLRenderer({
+				antialias: true
+			});
+			renderer.setClearColor(0xeeeeee);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			// Definir saida do webGL
+			container = document.getElementById("webgl");
+			container.appendChild(renderer.domElement);
+
+			controles();
+
+			// Criar objetos
+			criarObjetos();
+
+			// Chama os eventos
+			eventos();
+
+			requestAnimationFrame(animacao);
+		}
+
+		function controles(){
+			// Mover a tela
+			orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+			orbitControls.addEventListener('change', render);
+		}
+
+
+		function animacao(){
+			scene.simulate();
+			orbitControls.update();
+			render();
+
+			requestAnimationFrame(animacao);
+		}
+
+		function render(){
+			renderer.render(scene, camera);
+		}
+
+		// Criar objetos
+		function criarObjetos(){
+			
+			// Criar eixos
+			var axes = new THREE.AxisHelper(20);
+			scene.add(axes);
+
+
+			objetos.push(criarCubo(3,10,3, 2,2,2, 0x888888));
+
+			objetos.push(criarCubo(4,1,8, 1,1,1, 0x6c62c1));
+
+			// Crair chao
+			var chao = criarCubo(5,0,5, 10,0.5,10, 0x00ff00);
+			chao.mass = 0;
+
+		}
+
+		// Cria um cubo
+		// x,y, z: coordenadas
+		// largura, atura, profundidade: tamanho
+		// cor: a cor em hexadecimal
+		function criarCubo(x, y, z, largura, altura, profundidade, cor){
+			var cubo = new Physijs.BoxMesh(
+			
+				new THREE.BoxGeometry(largura,altura,profundidade), // Geotmetria
+				new THREE.MeshBasicMaterial({ // Material
+					color: cor
+				
+				})
+			);
+
+			// Posicao do cubo
+			cubo.position.set(x,y,z);
+			scene.add(cubo);
+
+			return cubo;
+		}
+
+		function eventos(){
+
+			scene.addEventListener( 'update', eUpdate);
+
+			renderer.domElement.addEventListener('mousemove', eMouseMove, false);
+			renderer.domElement.addEventListener('mousedown', eMouseDown);
+			renderer.domElement.addEventListener('mouseup', eMouseUp);
+
+		}
+
+		function ajustarCoordenadasMouse(pEvent, pMouse){
+			pMouse.x = ( pEvent.clientX / window.innerWidth ) * 2 - 1;
+			pMouse.y = - ( pEvent.clientY / window.innerHeight ) * 2 + 1;
+		}
+
+		function eUpdate(){
+
+		}
+
+		function eMouseMove(event){
+
+			event.preventDefault();
+			
+			ajustarCoordenadasMouse(event, mouse);
+
+			raycaster.setFromCamera(mouse, camera);
+
+			if(cuboSelecionado){
+
+				if(raycaster.ray.intersectPlane(plano, posicaoMousePlano)){
+					cuboSelecionado.__dirtyPosition = true;
+					cuboSelecionado.position.copy(posicaoMousePlano.sub(offset));
+				}
+				return;
+			}
+
+			var intersects = raycaster.intersectObjects(objetos);
+
+			if(intersects.length > 0){
+
+				if(objetoInterceptado != intersects[0].object){
+					objetoInterceptado = intersects[0].object;
+
+					plano.setFromNormalAndCoplanarPoint(
+						camera.getWorldDirection(plano.normal),
+						objetoInterceptado.position
+					);
+				}
+
+			} else{
+				objetoInterceptado = null;
+			}
+		}
+
+		function eMouseDown(event){
+			
+			event.preventDefault();
+
+			ajustarCoordenadasMouse(event, mouse)
+
+			raycaster.setFromCamera(mouse, camera);
+			var intersects = raycaster.intersectObjects(objetos);
+
+			// Se o cubo foi selecionado calule o offset
+			if(intersects.length > 0){
+
+				orbitControls.enabled = false;
+
+				cuboSelecionado = intersects[0].object;
+
+				objetoTirarFisica(cuboSelecionado);
+
+				if(raycaster.ray.intersectPlane(plano, posicaoMousePlano)){
+					offset.copy(posicaoMousePlano).sub(cuboSelecionado.position);
+				}
+				
+			}
+
+			console.log("eMouseDown");
+		}
+
+		function eMouseUp(event){
+			event.preventDefault();
+
+			orbitControls.enabled = true;
+
+			if(objetoInterceptado){
+				objetoBotarFisica(cuboSelecionado);
+				cuboSelecionado.__dirtyPosition = false;
+				cuboSelecionado = null;
+
+				console.log("up");
+			}
+
+		}
+
+		// Nao e bem tirar a fisica mais foi so 
+		function objetoTirarFisica(pObjeto){
+
+			var v = new THREE.Vector3(0,0,0);
+
+			pObjeto.setAngularFactor( v );
+			pObjeto.setAngularVelocity( v );
+			pObjeto.setLinearFactor( v );
+			pObjeto.setLinearVelocity( v );
+
+		}
+
+		function objetoBotarFisica(pObjeto){
+			if(pObjeto !== null){
+				var v = new THREE.Vector3(1,1,1);
+				pObjeto.setAngularFactor(v);
+				pObjeto.setLinearFactor(v);
+			}
+		}
+
+		init();
+
+
+	</script>
+</body>
+</html>
