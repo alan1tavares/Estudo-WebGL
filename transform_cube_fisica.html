@@ -11,7 +11,7 @@
 <body>
 	<div id="webgl"> </div>
 	<script type="text/javascript">
-		var scene, camera, renderer, transformControls;
+		var scene, camera, renderer, transformControls, orbitControls;
 
 		var raycaster = new THREE.Raycaster();
 		var mouse = new THREE.Vector2();
@@ -25,41 +25,53 @@
     	Physijs.scripts.ammo = '../build/ammo.js';
 
 		function init(){
-			// Creating Scene
+			// Criar scene
 			scene = new Physijs.Scene();
 
-			// Creating Camera
+			// Criar camera
 			camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
 			camera.position.set(15,15,30);
 			camera.lookAt(scene.position);
 
-			// Create Renderer
+			// Criar renderer
 			renderer = new THREE.WebGLRenderer();
 			renderer.setClearColor(0xEEEEEE);
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
-			// Create axis
+			// Criar eixos
 			var axes = new THREE.AxisHelper(20);
 			scene.add(axes);
 
-			// Set output webGL
+			// Definir saida do webGL
 			document.getElementById("webgl").appendChild(renderer.domElement);
 
-			// Controls object
+			// Controle dos objetos
 			transformControls = new THREE.TransformControls(camera, renderer.domElement);
 			transformControls.setMode("translate");
 			transformControls.addEventListener('change', render);
 			scene.add(transformControls);
+
+			// Controle da scene
+			orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 			
-			objects();
+			criarObjetos();
 
 			eventos();
+		}
+
+		// Colocar as chamadas de eventos aqui
+		function eventos(){
+
+			renderer.domElement.addEventListener('mousedown', eMouseDown);
+			renderer.domElement.addEventListener('mouseup', eMouseUp);
+
 		}
 
 		function animate(){
 
 			scene.simulate();
 			transformControls.update();
+			orbitControls.update();
 			render();
 
 			requestAnimationFrame(animate);
@@ -69,8 +81,11 @@
 			renderer.render(scene, camera);
 		}
 
-		function objects(){
+		// Colocar todos objetos nessa funcao
+		function criarObjetos(){
 			objetos.push(criarCubo(5,10,10, 1,1,1, 0x00ff00));
+			objetos.push(criarCubo(5,5,5, 1,1,1, 0xff0000));
+			objetos.push(criarCubo(3,2,1, 2,2,2, 0x0000ff));
 
 			// Crair chao
 			var chao = criarCubo(5,0,5, 10,0.5,15, 0x992489);
@@ -98,7 +113,7 @@
 			return cubo;
 		}
 
-		// Nao e bem tirar a fisica mais foi so 
+		// Funcao para tirar a fisica do objeto
 		function tirarFisicaDo(pObjeto){
 
 			var v = new THREE.Vector3(0,0,0);
@@ -108,58 +123,60 @@
 			pObjeto.setLinearFactor( v );
 			pObjeto.setLinearVelocity( v );
 
-		}		
-
-		function eventos(){
-
-			renderer.domElement.addEventListener('mousedown', eMouseDown);
-			renderer.domElement.addEventListener('mouseup', eMouseUp);
-
 		}
 
-		function eMouseDown(event){
-			if(event.button === 0){
-			event.preventDefault();
-
-			mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-			mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-			raycaster.setFromCamera(mouse, camera);
-			var intersects = raycaster.intersectObjects(objetos);
-
-			console.log(intersects);
-
-			if(intersects.length > 0){
-				objetoSelecionado = intersects[0].object;
-
-				// Configurar o objeto TransformControls
-				transformControls.attach(intersects[0].object);
-				transformControls.visible = true;
-
-				// Configurar o objeto selecionado
-				objetoSelecionado.__dirtyPosition = true;
-				tirarFisicaDo(objetoSelecionado);
-
-			}else{
-				transformControls.detach();
-				objetoBotarFisica(objetoSelecionado);
-			}
-		}
-
-
-		}
-
-		function eMouseUp(event){
-
-		}
-
-		function objetoBotarFisica(pObjeto){
+		// Funcao para botar a fisica no objeto
+		function botarFisicaNo(pObjeto){
 			if(pObjeto !== null){
 				var v = new THREE.Vector3(1,1,1);
 				pObjeto.setAngularFactor(v);
 				pObjeto.setLinearFactor(v);
 			}
-		}	
+		}			
+
+		function eMouseDown(event){
+
+			// Se clicou com o botão esquerdo
+			if(event.button === 0){
+				event.preventDefault();
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+				raycaster.setFromCamera(mouse, camera);
+				var intersects = raycaster.intersectObjects(objetos);
+
+				// Se algum objeto for clicado, selecione ele
+				if(intersects.length > 0 && transformControls.get_intersect() == false){
+					
+					if(objetoSelecionado != intersects.length.object){
+						transformControls.detach();
+						botarFisicaNo(objetoSelecionado);
+					}
+									
+					objetoSelecionado = intersects[0].object;
+
+					// Configurar o objeto TransformControls
+					transformControls.attach(intersects[0].object);
+					transformControls.visible = true;
+
+					// Configurar o objeto selecionado
+					objetoSelecionado.__dirtyPosition = true;
+					tirarFisicaDo(objetoSelecionado);
+
+				}
+
+				// Se os objetjos de TransformControl nao for selecionado, desselecionar o objeto
+				else if(transformControls.get_intersect() == false){
+					transformControls.detach();
+					botarFisicaNo(objetoSelecionado);
+				}
+			}
+		}
+
+		function eMouseUp(event){
+
+		}
 
 		init();
 		animate();

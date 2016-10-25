@@ -623,6 +623,8 @@
 
 		var scope = this;
 
+		var _intersect = false // cebola
+
 		var _mode = "translate";
 		var _dragging = false;
 		var _plane = "XY";
@@ -723,7 +725,7 @@
 		this.attach = function ( object ) {
 
 			this.object = object;
-			scope.object.__dirtyPosition = true;
+			this.object.__dirtyPosition = true;
 			this.visible = true;
 			this.update();
 
@@ -818,6 +820,10 @@
 
 		};
 
+		this.get_intersect = function(){
+			return _intersect;
+		};
+
 		function onPointerHover( event ) {
 
 			if ( scope.object === undefined || _dragging === true || ( event.button !== undefined && event.button !== 0 ) ) return;
@@ -861,6 +867,8 @@
 					event.preventDefault();
 					event.stopPropagation();
 
+					_intersect = true; // Alterei isso
+
 					scope.dispatchEvent( mouseDownEvent );
 
 					scope.axis = intersect.object.name;
@@ -888,6 +896,8 @@
 
 					}
 
+				}else{ // esse else não existe
+					_intersect = false;
 				}
 
 			}
