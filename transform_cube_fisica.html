@@ -83,27 +83,35 @@
 
 		// Colocar todos objetos nessa funcao
 		function criarObjetos(){
-			objetos.push(criarCubo(5,10,10, 1,1,1, 0x00ff00));
-			objetos.push(criarCubo(5,5,5, 1,1,1, 0xff0000));
-			objetos.push(criarCubo(3,2,1, 2,2,2, 0x0000ff));
+			
+			var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+			objetos.push(criarCubo(5,10,10, 1,1,1, material));
+			
+			material = new THREE.MeshBasicMaterial({color: 0xff0000});
+			objetos.push(criarCubo(5,5,5, 1,1,1, material));
+			
+			material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+			objetos.push(criarCubo(3,2,1, 2,2,2, material));
 
 			// Crair chao
-			var chao = criarCubo(5,0,5, 10,0.5,15, 0x992489);
-			chao.mass = 0;
+			material = new THREE.MeshBasicMaterial({
+				opacity: 0.5,
+				color: 0x44ff44,
+				transparent: true
+			});
+			
+			criarContainner(5,0,5, 10,10,15, material);
 		}
 
 		// Cria um cubo
 		// x,y, z: coordenadas
 		// largura, atura, profundidade: tamanho
 		// cor: a cor em hexadecimal
-		function criarCubo(x, y, z, largura, altura, profundidade, cor){
+		function criarCubo(x, y, z, largura, altura, profundidade, material){
 			var cubo = new Physijs.BoxMesh(
 			
 				new THREE.BoxGeometry(largura,altura,profundidade), // Geotmetria
-				new THREE.MeshBasicMaterial({ // Material
-					color: cor
-				
-				})
+				material
 			);
 
 			// Posicao do cubo
@@ -111,6 +119,45 @@
 			scene.add(cubo);
 
 			return cubo;
+		}
+
+		// Cria um containner
+		// x,y, z: coordenadas
+		// largura, atura, profundidade: tamanho
+		// cor: a cor em hexadecimal
+		function criarContainner(x,y,z, largura,altura,profundidade, material){
+			
+			// Lado inferiror
+			var chao = criarCubo(0,0,0, largura,0.1,profundidade, material);
+			chao.mass = 0;
+
+			//Lado esquerdo
+			var ladoEsquerdo = criarCubo(-largura/2,altura/2,0, 0.1,altura,profundidade, material);
+			ladoEsquerdo.mass = 0;
+
+			// Lado direito
+			var ladoDireito = criarCubo(largura/2,altura/2,0, 0.1,altura,profundidade, material);
+			ladoDireito.mass = 0;
+
+			// Lado detras
+			var ladoDetras = criarCubo(0,altura/2,-profundidade/2, largura,altura,0.1, material);
+			ladoDetras.mass = 0;
+
+			// Lado da frente
+			var ladoDaFrente = criarCubo(0,altura/2,profundidade/2, largura,altura,0.1, material);
+			ladoDaFrente.mass = 0;
+
+			chao.add(ladoEsquerdo);
+			chao.add(ladoDireito);
+			chao.add(ladoDetras);
+			chao.add(ladoDaFrente);
+			
+			chao.position.set(x,y,z);
+
+			chao.material.opacity = 0.5;
+			chao.material.transparent = true;
+
+			scene.add(chao);
 		}
 
 		// Funcao para tirar a fisica do objeto
