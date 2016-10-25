@@ -99,8 +99,12 @@
 				color: 0x44ff44,
 				transparent: true
 			});
-			
-			criarContainner(5,0,5, 10,10,15, material);
+
+			criarContainner(5,0.1,5, 3,5,5, material);
+
+			// Chao
+			material = new THREE.MeshBasicMaterial({color: 0x918b82});
+			criarCubo(5,0,5, 10,0.1,15, material).mass=0;
 		}
 
 		// Cria um cubo
